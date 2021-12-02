@@ -1,0 +1,19 @@
+{
+  "id": "algorand",
+  "name": "Algorand",
+  "title": "Algorand",
+  "description": "Algorand integration with xCoin module",
+  "keywords": ["algorand, smart contracts, xcoin"],
+  "version": "0.1.0",
+  "minimumCoreVersion": "0.1.0",
+  "humhub": {
+    "minVersion": "1.3"
+  },
+  "authors": [
+    {
+      "name": "Ghaith Daly",
+      "email": "daly.ghaith@gmail.com",
+      "role": "Backend Developer"
+    }
+  ]
+}
