@@ -1,7 +1,7 @@
 <?php
 /**
  * @link https://coinsence.org/
- * @copyright Copyright (c) 2018 Coinsence
+ * @copyright Copyright (c) 2021 Coinsence
  * @license https://www.humhub.com/licences
  *
  * @author Daly Ghaith <daly.ghaith@gmail.com>
