@@ -20,8 +20,8 @@ class Endpoints
     // rest api endpoints list
     const ENDPOINT_ASSET = '/asset';
     const ENDPOINT_COIN_TRANSFER = '/coin/transfer';
-    const ENDPOINT_COIN_BALANCE = '/coin/transfer';
+    const ENDPOINT_COIN_BALANCE = '/coin/balance';
     const ENDPOINT_ALGO_BALANCE= '/api/getAlgoBalance';
     const ENDPOINT_WALLET = '/wallet';
-
+    const ENDPOINT_WALLET_INFO = '/walletInfo';
 }

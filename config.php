@@ -8,6 +8,8 @@
  */
 
 use humhub\modules\xcoin\models\Account;
+use humhub\modules\xcoin\models\Transaction;
+use yii\base\Model;
 use yii\db\ActiveRecord;
 
 return [
@@ -17,8 +19,13 @@ return [
     'events' => [
         [
             'class' => Account::class,
-            'event' => ActiveRecord::EVENT_BEFORE_VALIDATE,
+            'event' => Model::EVENT_AFTER_VALIDATE,
             'callback' => ['humhub\modules\algorand\calls\Wallet', 'createWallet']
+        ],
+        [
+            'class' => Transaction::class,
+            'event' => 'transactionTypeIssue',
+            'callback' => ['humhub\modules\algorand\calls\Coin', 'mintCoin']
         ],
     ],
 ];
