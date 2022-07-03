@@ -24,4 +24,5 @@ class Endpoints
     const ENDPOINT_ALGO_BALANCE= '/api/getAlgoBalance';
     const ENDPOINT_WALLET = '/wallet';
     const ENDPOINT_WALLET_INFO = '/walletInfo';
+    const ENDPOINT_OPTIN = '/optin';
 }

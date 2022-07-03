@@ -1,7 +1,7 @@
 <?php
 /**
  * @link https://coinsence.org/
- * @copyright Copyright (c) 2021 Coinsence
+ * @copyright Copyright (c) 2022 Coinsence
  * @license https://www.humhub.com/licences
  *
  * @author Daly Ghaith <daly.ghaith@gmail.com>
@@ -10,7 +10,6 @@
 use humhub\modules\xcoin\models\Account;
 use humhub\modules\xcoin\models\Transaction;
 use yii\base\Model;
-use yii\db\ActiveRecord;
 
 return [
     'id' => 'algorand',
@@ -26,6 +25,11 @@ return [
             'class' => Transaction::class,
             'event' => 'transactionTypeIssue',
             'callback' => ['humhub\modules\algorand\calls\Coin', 'mintCoin']
+        ],
+        [
+            'class' => Transaction::class,
+            'event' => 'transactionTypeTransfer',
+            'callback' => ['humhub\modules\algorand\calls\Coin', 'transferCoin']
         ],
     ],
 ];

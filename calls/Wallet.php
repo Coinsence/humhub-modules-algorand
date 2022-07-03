@@ -9,11 +9,13 @@
 
 namespace humhub\modules\algorand\calls;
 
+use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\RequestOptions;
 use humhub\modules\algorand\Endpoints;
 use humhub\modules\algorand\utils\Helpers;
 use humhub\modules\algorand\utils\HttpStatus;
 use humhub\modules\xcoin\models\Account;
+use yii\web\HttpException;
 
 class Wallet
 {
@@ -43,6 +45,28 @@ class Wallet
             $account->addError(
                 'address',
                 "Sorry, we're facing some problems while creating you're alogrand wallet. We will fix this ASAP!"
+            );
+        }
+    }
+
+    /**
+     * @throws GuzzleException
+     * @throws HttpException
+     */
+    public static function walletInfo(Account $account)
+    {
+        BaseCall::__init();
+
+        $response = BaseCall::$httpClient->request('GET', Endpoints::ENDPOINT_WALLET_INFO, [
+            RequestOptions::QUERY => ['id' => $account->guid]
+        ]);
+
+        if ($response->getStatusCode() == HttpStatus::OK) {
+            return json_decode($response->getBody()->getContents());
+        } else {
+            throw new HttpException(
+                $response->getStatusCode(),
+                "Could not retrieve wallet info for account with guid '{$account->guid}', will fix this ASAP !"
             );
         }
     }

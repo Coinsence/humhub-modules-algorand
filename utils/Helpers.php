@@ -17,6 +17,8 @@ class Helpers
     const COIN_SUFFIX = 'Coin';
     const COIN_DECIMALS = 18;
 
+    const REQUEST_DELAY = 15; // wait 15 seconds after requests specially with POST /wallet that need to be funded with 0.1 eth
+
     public static function generateAccountGuid(Account $account)
     {
         $account->updateAttributes(['guid' => UUID::v4()]);
