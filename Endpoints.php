@@ -21,6 +21,7 @@ class Endpoints
     const ENDPOINT_ASSET = '/asset';
     const ENDPOINT_COIN_TRANSFER = '/coin/transfer';
     const ENDPOINT_COIN_BALANCE = '/coin/balance';
+    const ENDPOINT_COIN_BALANCE_LIST = '/coin/balanceList';
     const ENDPOINT_ALGO_BALANCE= '/api/getAlgoBalance';
     const ENDPOINT_WALLET = '/wallet';
     const ENDPOINT_WALLET_INFO = '/walletInfo';

@@ -9,6 +9,7 @@
 
 namespace humhub\modules\algorand\calls;
 
+use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\RequestOptions;
 use humhub\components\Event;
@@ -50,8 +51,8 @@ class Coin
                 'accountId' => $recipientAccount->guid,
                 'coinSymbol' => $coinSymbol,
                 'coinName' => $coinName,
-                'coinDecimals' => 3,
-                'totalIssuance' => (float)$transaction->amount,
+                'coinDecimals' => Helpers::COIN_DECIMALS,
+                'totalIssuance' => Helpers::formatCoinAmount((float)$transaction->amount),
             ]
         ]);
 
@@ -109,14 +110,14 @@ class Coin
                 'accountIdTo' => $recipientAccount->guid,
                 'publicKeyFrom' => $senderAccount->algorand_address,
                 'accountIdFrom' => $senderAccount->guid,
-                'assetId' => (int) $asset->algorand_asset_id,
-                'amount' => $transaction->amount,
+                'assetId' => (int)$asset->algorand_asset_id,
+                'amount' => (float)$transaction->amount,
             ]
         ]);
 
         if ($response->getStatusCode() == HttpStatus::OK) {
             $body = json_decode($response->getBody()->getContents());
-            $transaction->updateAttributes(['algorand_tx_id' => $body->{"Transaction ID"}]);
+            $transaction->updateAttributes(['algorand_tx_id' => $body->transactionID]);
         } else {
             throw new HttpException(
                 $response->getStatusCode(),
@@ -129,9 +130,79 @@ class Coin
      * @throws GuzzleException
      * @throws HttpException
      */
+    public static function balance(Account $account, Asset $asset)
+    {
+        BaseCall::__init();
+
+        try {
+            $response = BaseCall::$httpClient->request('GET', Endpoints::ENDPOINT_COIN_BALANCE, [
+                RequestOptions::QUERY => [
+                    'accountId' => $account->guid,
+                    'assetId' => $asset->algorand_asset_id,
+                ]
+            ]);
+        } catch (ClientException $exception) {
+            return null;
+        }
+
+        return json_decode($response->getBody()->getContents());
+    }
+
+    /**
+     * @throws GuzzleException
+     * @throws HttpException
+     */
+    public static function balanceList(Account $account)
+    {
+        BaseCall::__init();
+
+        $response = BaseCall::$httpClient->request('GET', Endpoints::ENDPOINT_COIN_BALANCE_LIST, [
+            RequestOptions::QUERY => [
+                'accountId' => $account->guid,
+            ]
+        ]);
+
+        if ($response->getStatusCode() != HttpStatus::OK) {
+            throw new HttpException(
+                $response->getStatusCode(),
+                "Error occurred when retrieving assets balances for account with guid = {$account->guid}. Please try again!"
+            );
+        }
+
+        return json_decode($response->getBody()->getContents());
+    }
+
+    /**
+     * @throws GuzzleException
+     * @throws HttpException
+     */
+    public static function transactionsList(Account $account)
+    {
+        BaseCall::__init();
+
+        $response = BaseCall::$httpClient->request('GET', Endpoints::ENDPOINT_COIN_BALANCE_LIST, [
+            RequestOptions::QUERY => [
+                'accountId' => $account->guid,
+            ]
+        ]);
+
+        if ($response->getStatusCode() != HttpStatus::OK) {
+            throw new HttpException(
+                $response->getStatusCode(),
+                "Error occurred when retrieving assets balances for account with guid = {$account->guid}. Please try again!"
+            );
+        }
+
+        return json_decode($response->getBody()->getContents());
+    }
+
+    /**
+     * @throws GuzzleException
+     * @throws HttpException
+     */
     public static function optinCoin($account, $assetId)
     {
-        if(!$account instanceof Account) {
+        if (!$account instanceof Account) {
             return;
         }
 
@@ -141,7 +212,7 @@ class Coin
             RequestOptions::JSON => [
                 'publicKey' => $account->algorand_address,
                 'accountId' => $account->guid,
-                'assetId' => (int) $assetId,
+                'assetId' => (int)$assetId,
             ]
         ]);
 
