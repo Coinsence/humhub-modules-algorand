@@ -26,4 +26,6 @@ class Endpoints
     const ENDPOINT_WALLET = '/wallet';
     const ENDPOINT_WALLET_INFO = '/walletInfo';
     const ENDPOINT_OPTIN = '/optin';
+    const ENDPOINT_TRANSACTION = '/getTransaction';
+    const ENDPOINT_TRANSACTION_LIST = '/getAllTransactions';
 }

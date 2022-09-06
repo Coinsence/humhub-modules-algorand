@@ -134,6 +134,11 @@ class Coin
     {
         BaseCall::__init();
 
+        if (!$account->algorand_address) {
+            Wallet::createWallet(new Event(['sender' => $account]));
+            sleep(Helpers::REQUEST_DELAY);
+        }
+
         try {
             $response = BaseCall::$httpClient->request('GET', Endpoints::ENDPOINT_COIN_BALANCE, [
                 RequestOptions::QUERY => [
@@ -156,6 +161,11 @@ class Coin
     {
         BaseCall::__init();
 
+        if (!$account->algorand_address) {
+            Wallet::createWallet(new Event(['sender' => $account]));
+            sleep(Helpers::REQUEST_DELAY);
+        }
+
         $response = BaseCall::$httpClient->request('GET', Endpoints::ENDPOINT_COIN_BALANCE_LIST, [
             RequestOptions::QUERY => [
                 'accountId' => $account->guid,
@@ -176,11 +186,40 @@ class Coin
      * @throws GuzzleException
      * @throws HttpException
      */
+    public static function transaction($txID)
+    {
+        BaseCall::__init();
+
+        $response = BaseCall::$httpClient->request('GET', Endpoints::ENDPOINT_TRANSACTION, [
+            RequestOptions::QUERY => [
+                'txId' => $txID,
+            ]
+        ]);
+
+        if ($response->getStatusCode() != HttpStatus::OK) {
+            throw new HttpException(
+                $response->getStatusCode(),
+                "Error occurred when retrieving transaction details for txID = {$txID}. Please try again!"
+            );
+        }
+
+        return json_decode($response->getBody()->getContents())->transaction;
+    }
+
+    /**
+     * @throws GuzzleException
+     * @throws HttpException
+     */
     public static function transactionsList(Account $account)
     {
         BaseCall::__init();
 
-        $response = BaseCall::$httpClient->request('GET', Endpoints::ENDPOINT_COIN_BALANCE_LIST, [
+        if (!$account->algorand_address) {
+            Wallet::createWallet(new Event(['sender' => $account]));
+            sleep(Helpers::REQUEST_DELAY);
+        }
+
+        $response = BaseCall::$httpClient->request('GET', Endpoints::ENDPOINT_TRANSACTION_LIST, [
             RequestOptions::QUERY => [
                 'accountId' => $account->guid,
             ]
@@ -189,7 +228,7 @@ class Coin
         if ($response->getStatusCode() != HttpStatus::OK) {
             throw new HttpException(
                 $response->getStatusCode(),
-                "Error occurred when retrieving assets balances for account with guid = {$account->guid}. Please try again!"
+                "Error occurred when retrieving transactions list for account with guid = {$account->guid}. Please try again!"
             );
         }
 
@@ -202,6 +241,11 @@ class Coin
      */
     public static function optinCoin($account, $assetId)
     {
+        if (!$account->algorand_address) {
+            Wallet::createWallet(new Event(['sender' => $account]));
+            sleep(Helpers::REQUEST_DELAY);
+        }
+
         if (!$account instanceof Account) {
             return;
         }
