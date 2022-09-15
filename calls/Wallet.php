@@ -15,10 +15,14 @@ use humhub\modules\algorand\Endpoints;
 use humhub\modules\algorand\utils\Helpers;
 use humhub\modules\algorand\utils\HttpStatus;
 use humhub\modules\xcoin\models\Account;
+use WalletInfo;
 use yii\web\HttpException;
 
 class Wallet
 {
+    /**
+     * @throws HttpException
+     */
     public static function createWallet($event)
     {
         $account = $event->sender;
@@ -33,25 +37,35 @@ class Wallet
 
         BaseCall::__init();
 
-        $response = BaseCall::$httpClient->request('POST', Endpoints::ENDPOINT_WALLET, [
-            RequestOptions::JSON => ['accountId' => $account->guid]
-        ]);
+        try {
+            /** @var WalletInfo $walletInfo */
+            $walletInfo = self::walletInfo($account);
+            $account->updateAttributes(['algorand_address' => $walletInfo->publicKey]);
+        } catch (GuzzleException $exception) {
+            // create wallet if wallet info is unavailable
+            if ($exception->getCode() === HttpStatus::BAD_REQUEST) {
+                try {
+                    $response = BaseCall::$httpClient->request('POST', Endpoints::ENDPOINT_WALLET, [
+                        RequestOptions::JSON => ['accountId' => $account->guid]
+                    ]);
 
-        if ($response->getStatusCode() == HttpStatus::OK) {
-            $body = json_decode($response->getBody()->getContents());
-            $account->updateAttributes(['algorand_address' => $body->address]);
-            $account->updateAttributes(['algorand_mnemonic' => $body->Mnemonic]);
-        } else {
-            $account->addError(
-                'address',
-                "Sorry, we're facing some problems while creating you're alogrand wallet. We will fix this ASAP!"
-            );
+                    if ($response->getStatusCode() == HttpStatus::OK) {
+                        $body = json_decode($response->getBody()->getContents());
+                        $account->updateAttributes(['algorand_address' => $body->address]);
+                        $account->updateAttributes(['algorand_mnemonic' => $body->Mnemonic]);
+                    }
+                } catch (GuzzleException $exception) {
+                    throw new HttpException(
+                        $exception->getCode(),
+                        "Sorry, we're facing some problems while creating you're alogrand wallet. We will fix this ASAP!"
+                    );
+                }
+            }
         }
     }
 
     /**
      * @throws GuzzleException
-     * @throws HttpException
      */
     public static function walletInfo(Account $account)
     {
@@ -61,13 +75,6 @@ class Wallet
             RequestOptions::QUERY => ['id' => $account->guid]
         ]);
 
-        if ($response->getStatusCode() == HttpStatus::OK) {
-            return json_decode($response->getBody()->getContents());
-        } else {
-            throw new HttpException(
-                $response->getStatusCode(),
-                "Could not retrieve wallet info for account with guid '{$account->guid}', will fix this ASAP !"
-            );
-        }
+        return Helpers::cast(json_decode($response->getBody()->getContents()), WalletInfo::class);
     }
 }
