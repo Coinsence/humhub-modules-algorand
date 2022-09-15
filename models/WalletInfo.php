@@ -7,6 +7,8 @@
  * @author Daly Ghaith <daly.ghaith@gmail.com>
  */
 
+namespace humhub\modules\algorand\models;
+
 class WalletInfo
 {
     public $balance;

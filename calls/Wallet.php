@@ -12,10 +12,10 @@ namespace humhub\modules\algorand\calls;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\RequestOptions;
 use humhub\modules\algorand\Endpoints;
+use humhub\modules\algorand\models\WalletInfo;
 use humhub\modules\algorand\utils\Helpers;
 use humhub\modules\algorand\utils\HttpStatus;
 use humhub\modules\xcoin\models\Account;
-use WalletInfo;
 use yii\web\HttpException;
 
 class Wallet
