@@ -43,6 +43,11 @@ class Coin
 
         $recipientAccount = Account::findOne(['id' => $transaction->to_account_id,]);
 
+        if (!$recipientAccount->algorand_address) {
+            Wallet::createWallet(new Event(['sender' => $recipientAccount]));
+            sleep(Helpers::REQUEST_DELAY);
+        }
+
         BaseCall::__init();
 
         $response = BaseCall::$httpClient->request('POST', Endpoints::ENDPOINT_ASSET, [
