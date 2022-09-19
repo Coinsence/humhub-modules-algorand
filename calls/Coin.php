@@ -110,27 +110,26 @@ class Coin
 
         self::optinCoin($recipientAccount, $asset->algorand_asset_id);
 
-        BaseCall::__init();
+        try {
+            BaseCall::__init();
 
-        $response = BaseCall::$httpClient->request('POST', Endpoints::ENDPOINT_COIN_TRANSFER, [
-            RequestOptions::JSON => [
-                'publicKeyTo' => $recipientAccount->algorand_address,
-                'accountIdTo' => $recipientAccount->guid,
-                'publicKeyFrom' => $senderAccount->algorand_address,
-                'accountIdFrom' => $senderAccount->guid,
-                'assetId' => (int)$asset->algorand_asset_id,
-                'amount' => (float)$transaction->amount,
-            ]
-        ]);
+            $response = BaseCall::$httpClient->request('POST', Endpoints::ENDPOINT_COIN_TRANSFER, [
+                RequestOptions::JSON => [
+                    'publicKeyTo' => $recipientAccount->algorand_address,
+                    'accountIdTo' => $recipientAccount->guid,
+                    'publicKeyFrom' => $senderAccount->algorand_address,
+                    'accountIdFrom' => $senderAccount->guid,
+                    'assetId' => (int)$asset->algorand_asset_id,
+                    'amount' => (float)$transaction->amount,
+                ]
+            ]);
 
-        if ($response->getStatusCode() == HttpStatus::OK) {
-            $body = json_decode($response->getBody()->getContents());
-            $transaction->updateAttributes(['algorand_tx_id' => $body->transactionID]);
-        } else {
-            throw new HttpException(
-                $response->getStatusCode(),
-                'Could not do transfer coins, will fix this ASAP !'
-            );
+            if ($response->getStatusCode() == HttpStatus::OK) {
+                $body = json_decode($response->getBody()->getContents());
+                $transaction->updateAttributes(['algorand_tx_id' => $body->transactionID]);
+            }
+        } catch (GuzzleException $exception) {
+            throw new BadRequestHttpException($exception->getMessage());
         }
     }
 
