@@ -273,7 +273,7 @@ class Coin
 
         $minimumRequiredAlgoBalance = Helpers::calculateMinimumRequiredAlgoBalance(count($walletAssetsList));
 
-        $missingAlgoBalance = $walletAlgoBalance->balance - $minimumRequiredAlgoBalance;
+        $missingAlgoBalance = $minimumRequiredAlgoBalance - $walletAlgoBalance->balance;
 
         if ($missingAlgoBalance > 0) {
 
