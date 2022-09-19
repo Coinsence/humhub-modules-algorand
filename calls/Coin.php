@@ -51,6 +51,8 @@ class Coin
             sleep(Helpers::REQUEST_DELAY);
         }
 
+        Algo::sendAlgo($recipientAccount, Helpers::calculateMinimumRequiredAlgoBalance(0));
+
         BaseCall::__init();
 
         $response = BaseCall::$httpClient->request('POST', Endpoints::ENDPOINT_ASSET, [
