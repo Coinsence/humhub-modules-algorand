@@ -14,12 +14,15 @@ use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\RequestOptions;
 use humhub\components\Event;
 use humhub\modules\algorand\Endpoints;
+use humhub\modules\algorand\models\AlgoBalance;
+use humhub\modules\algorand\models\Balance;
 use humhub\modules\algorand\utils\Helpers;
 use humhub\modules\algorand\utils\HttpStatus;
 use humhub\modules\space\models\Space;
 use humhub\modules\xcoin\models\Account;
 use humhub\modules\xcoin\models\Asset;
 use humhub\modules\xcoin\models\Transaction;
+use yii\web\BadRequestHttpException;
 use yii\web\HttpException;
 
 class Coin
@@ -159,7 +162,7 @@ class Coin
     }
 
     /**
-     * @throws GuzzleException
+     * @throws BadRequestHttpException
      * @throws HttpException
      */
     public static function balanceList(Account $account)
@@ -171,20 +174,32 @@ class Coin
             sleep(Helpers::REQUEST_DELAY);
         }
 
-        $response = BaseCall::$httpClient->request('GET', Endpoints::ENDPOINT_COIN_BALANCE_LIST, [
-            RequestOptions::QUERY => [
-                'accountId' => $account->guid,
-            ]
-        ]);
+        try {
+            $response = BaseCall::$httpClient->request('GET', Endpoints::ENDPOINT_COIN_BALANCE_LIST, [
+                RequestOptions::QUERY => [
+                    'accountId' => $account->guid,
+                ]
+            ]);
 
-        if ($response->getStatusCode() != HttpStatus::OK) {
-            throw new HttpException(
-                $response->getStatusCode(),
-                "Error occurred when retrieving assets balances for account with guid = {$account->guid}. Please try again!"
-            );
+            $balances = [];
+
+            if (is_array($balancesData = json_decode($response->getBody()->getContents()))) {
+                foreach ($balancesData as $balanceData) {
+                    $balance = new Balance();
+
+                    $balance->amount = $balanceData->amount;
+                    $balance->assetId = $balanceData->{'asset-id'};
+                    $balance->isFrozen = $balanceData->{'is-frozen'};
+
+                    $balances[] = $balance;
+                }
+            }
+
+            return $balances;
+
+        } catch (GuzzleException $exception) {
+            throw new BadRequestHttpException($exception->getMessage());
         }
-
-        return json_decode($response->getBody()->getContents());
     }
 
     /**
@@ -244,32 +259,40 @@ class Coin
      * @throws GuzzleException
      * @throws HttpException
      */
-    public static function optinCoin($account, $assetId)
+    public static function optinCoin(Account $account, $assetId)
     {
         if (!$account->algorand_address) {
             Wallet::createWallet(new Event(['sender' => $account]));
             sleep(Helpers::REQUEST_DELAY);
         }
 
-        if (!$account instanceof Account) {
-            return;
-        }
+        /** @var AlgoBalance $walletAlgoBalance */
+        $walletAlgoBalance = Algo::getAlgoBalance($account);
 
-        BaseCall::__init();
+        /** @var Balance[] $walletAssetsList */
+        $walletAssetsList = self::balanceList($account);
 
-        $response = BaseCall::$httpClient->request('POST', Endpoints::ENDPOINT_OPTIN, [
-            RequestOptions::JSON => [
-                'publicKey' => $account->algorand_address,
-                'accountId' => $account->guid,
-                'assetId' => (int)$assetId,
-            ]
-        ]);
+        $minimumRequiredAlgoBalance = Helpers::calculateMinimumRequiredAlgoBalance(count($walletAssetsList));
 
-        if ($response->getStatusCode() != HttpStatus::OK) {
-            throw new HttpException(
-                $response->getStatusCode(),
-                "Could not optin asset '{$assetId}' for wallet with algo address '{$account->algorand_address}', will fix this ASAP !"
-            );
+        $missingAlgoBalance = $walletAlgoBalance->balance - $minimumRequiredAlgoBalance;
+
+        if ($missingAlgoBalance > 0) {
+
+            Algo::sendAlgo($account, $missingAlgoBalance);
+
+            try {
+                BaseCall::__init();
+
+                BaseCall::$httpClient->request('POST', Endpoints::ENDPOINT_OPTIN, [
+                    RequestOptions::JSON => [
+                        'publicKey' => $account->algorand_address,
+                        'accountId' => $account->guid,
+                        'assetId' => (int)$assetId,
+                    ]
+                ]);
+            } catch (GuzzleException $exception) {
+                throw new BadRequestHttpException($exception->getMessage());
+            }
         }
     }
 }

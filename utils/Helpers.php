@@ -59,4 +59,9 @@ class Helpers
             strstr(strstr(serialize($instance), '"'), ':')
         ));
     }
+
+    public static function calculateMinimumRequiredAlgoBalance($assetCount)
+    {
+        return 0.1 * ($assetCount + 1) + 0.11;
+    }
 }
