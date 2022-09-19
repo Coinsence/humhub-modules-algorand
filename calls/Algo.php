@@ -70,7 +70,7 @@ class Algo
         BaseCall::__init();
 
         try {
-            $response = BaseCall::$httpClient->request('POST', Endpoints::ENDPOINT_ALGO_BALANCE, [
+            $response = BaseCall::$httpClient->request('GET', Endpoints::ENDPOINT_ALGO_BALANCE, [
                 RequestOptions::QUERY => [
                     'accountId' => $account->guid,
                 ]
