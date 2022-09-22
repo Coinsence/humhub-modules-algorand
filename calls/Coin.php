@@ -15,6 +15,7 @@ use GuzzleHttp\RequestOptions;
 use humhub\components\Event;
 use humhub\modules\algorand\Endpoints;
 use humhub\modules\algorand\models\AlgoBalance;
+use humhub\modules\algorand\models\AssetHolder;
 use humhub\modules\algorand\models\Balance;
 use humhub\modules\algorand\utils\Helpers;
 use humhub\modules\algorand\utils\HttpStatus;
@@ -256,6 +257,37 @@ class Coin
         }
 
         return json_decode($response->getBody()->getContents());
+    }
+
+    /**
+     * @throws GuzzleException
+     * @throws BadRequestHttpException
+     */
+    public static function assetHolders(Asset $asset)
+    {
+        BaseCall::__init();
+
+        if (!$asset->algorand_asset_id) {
+            throw new BadRequestHttpException('Missing alogrand asset ID for given asset.');
+        }
+
+        try {
+            $response = BaseCall::$httpClient->request('GET', Endpoints::ENDPOINT_ASSET_LIST_BALANCE, [
+                RequestOptions::QUERY => [
+                    'assetIndex' => $asset->algorand_asset_id,
+                ]
+            ]);
+        } catch (GuzzleException $exception) {
+            throw new BadRequestHttpException($exception->getMessage());
+        }
+
+        $assetHolders = [];
+
+        foreach (json_decode($response->getBody()->getContents()) as $assetHolderData) {
+            $assetHolders[] = Helpers::cast($assetHolderData, AssetHolder::class);
+        }
+
+        return $assetHolders;
     }
 
     /**
