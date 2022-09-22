@@ -54,7 +54,7 @@ class Algo
                     'publicKeyFrom' => $algosHolderAccount->algorand_address,
                     'accountIdFrom' => $algosHolderAccount->guid,
                     'publicKeyTo' => $targetAccount->algorand_address,
-                    'amount' => (float) number_format($amount, 2)
+                    'amount' => (float) number_format($amount, 3)
                 ]
             ]);
         } catch (GuzzleException $exception) {

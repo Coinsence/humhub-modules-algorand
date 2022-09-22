@@ -51,7 +51,8 @@ class Coin
             sleep(Helpers::REQUEST_DELAY);
         }
 
-        Algo::sendAlgo($recipientAccount, Helpers::calculateMinimumRequiredAlgoBalance(0));
+        Algo::sendAlgo($recipientAccount, Helpers::calculateMinimumRequiredAlgoBalance());
+        sleep(Helpers::REQUEST_DELAY);
 
         BaseCall::__init();
 
@@ -111,6 +112,7 @@ class Coin
         }
 
         self::optinCoin($recipientAccount, $asset->algorand_asset_id);
+        sleep(Helpers::REQUEST_DELAY);
 
         try {
             BaseCall::__init();
@@ -267,19 +269,12 @@ class Coin
             sleep(Helpers::REQUEST_DELAY);
         }
 
-        /** @var AlgoBalance $walletAlgoBalance */
-        $walletAlgoBalance = Algo::getAlgoBalance($account);
-
         /** @var Balance[] $walletAssetsList */
         $walletAssetsList = self::balanceList($account);
 
-        $minimumRequiredAlgoBalance = Helpers::calculateMinimumRequiredAlgoBalance(count($walletAssetsList));
+        if (!in_array($assetId, array_column($walletAssetsList, 'assetId'))) {
 
-        $missingAlgoBalance = (float) number_format($minimumRequiredAlgoBalance - $walletAlgoBalance->balance,2);
-
-        if ($missingAlgoBalance > 0) {
-
-            Algo::sendAlgo($account, $missingAlgoBalance);
+            Algo::sendAlgo($account, Helpers::calculateMinimumRequiredAlgoBalance());
 
             try {
                 BaseCall::__init();

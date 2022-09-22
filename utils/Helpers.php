@@ -60,8 +60,8 @@ class Helpers
         ));
     }
 
-    public static function calculateMinimumRequiredAlgoBalance($assetCount)
+    public static function calculateMinimumRequiredAlgoBalance()
     {
-        return $assetCount * 0.1 + 0.05;
+        return 0.125;
     }
 }
