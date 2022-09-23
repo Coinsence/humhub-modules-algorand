@@ -212,20 +212,18 @@ class Coin
     {
         BaseCall::__init();
 
-        $response = BaseCall::$httpClient->request('GET', Endpoints::ENDPOINT_TRANSACTION, [
-            RequestOptions::QUERY => [
-                'txId' => $txID,
-            ]
-        ]);
+        try {
+            $response = BaseCall::$httpClient->request('GET', Endpoints::ENDPOINT_TRANSACTION, [
+                RequestOptions::QUERY => [
+                    'txId' => $txID,
+                ]
+            ]);
 
-        if ($response->getStatusCode() != HttpStatus::OK) {
-            throw new HttpException(
-                $response->getStatusCode(),
-                "Error occurred when retrieving transaction details for txID = {$txID}. Please try again!"
-            );
+            return json_decode($response->getBody()->getContents())->transaction;
+
+        } catch (GuzzleException $exception) {
+            return null;
         }
-
-        return json_decode($response->getBody()->getContents())->transaction;
     }
 
     /**
