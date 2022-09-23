@@ -19,6 +19,8 @@ class Helpers
 
     const REQUEST_DELAY = 15; // wait 15 seconds after requests specially with POST /wallet that need to be funded with 0.1 eth
 
+    const MINIMUM_ASSET_CREATION_ALGO_BALANCE = 0.21;
+
     public static function generateAccountGuid(Account $account)
     {
         $account->updateAttributes(['guid' => UUID::v4()]);

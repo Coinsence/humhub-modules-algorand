@@ -52,32 +52,30 @@ class Coin
             sleep(Helpers::REQUEST_DELAY);
         }
 
-        Algo::sendAlgo($recipientAccount, Helpers::calculateMinimumRequiredAlgoBalance(0));
+        Algo::sendAlgo($recipientAccount, Helpers::MINIMUM_ASSET_CREATION_ALGO_BALANCE);
         sleep(Helpers::REQUEST_DELAY);
 
         BaseCall::__init();
 
-        $response = BaseCall::$httpClient->request('POST', Endpoints::ENDPOINT_ASSET, [
-            RequestOptions::JSON => [
-                'publicKey' => $recipientAccount->algorand_address,
-                'accountId' => $recipientAccount->guid,
-                'coinSymbol' => $coinSymbol,
-                'coinName' => $coinName,
-                'coinDecimals' => Helpers::COIN_DECIMALS,
-                'totalIssuance' => Helpers::formatCoinAmount((float)$transaction->amount),
-            ]
-        ]);
+        try {
+            $response = BaseCall::$httpClient->request('POST', Endpoints::ENDPOINT_ASSET, [
+                RequestOptions::JSON => [
+                    'publicKey' => $recipientAccount->algorand_address,
+                    'accountId' => $recipientAccount->guid,
+                    'coinSymbol' => $coinSymbol,
+                    'coinName' => $coinName,
+                    'coinDecimals' => Helpers::COIN_DECIMALS,
+                    'totalIssuance' => Helpers::formatCoinAmount((float)$transaction->amount),
+                ]
+            ]);
 
-        if ($response->getStatusCode() == HttpStatus::OK) {
             $body = json_decode($response->getBody()->getContents());
+
             if (null == $asset->algorand_asset_id) {
                 $asset->updateAttributes(['algorand_asset_id' => $body->assetID]);
             }
-        } else {
-            throw new HttpException(
-                $response->getStatusCode(),
-                'Could not mint coins on alogrand, will fix this ASAP !'
-            );
+        } catch (GuzzleException $exception) {
+            throw new BadRequestHttpException($exception->getMessage());
         }
     }
 
@@ -268,7 +266,7 @@ class Coin
         BaseCall::__init();
 
         if (!$asset->algorand_asset_id) {
-            throw new BadRequestHttpException('Missing alogrand asset ID for given asset.');
+            return [];
         }
 
         try {
