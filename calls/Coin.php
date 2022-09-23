@@ -307,30 +307,29 @@ class Coin
         /** @var Balance[] $walletAssetsList */
         $walletAssetsList = self::balanceList($account);
 
-        $assetExists = in_array($assetId, array_column($walletAssetsList, 'assetId'));
-        $assetsCount = count($walletAssetsList);
+        if (!in_array($assetId, array_column($walletAssetsList, 'assetId'))) {
+            $minimumRequiredAlgoBalance = Helpers::calculateMinimumRequiredAlgoBalance(count($walletAssetsList));
 
-        $minimumRequiredAlgoBalance = Helpers::calculateMinimumRequiredAlgoBalance($assetExists ? $assetsCount - 1 : $assetsCount);
+            $missingAlgoBalance = $minimumRequiredAlgoBalance - $walletAlgoBalance->balance;
 
-        $missingAlgoBalance = $minimumRequiredAlgoBalance - $walletAlgoBalance->balance;
+            if ($missingAlgoBalance > 0) {
 
-        if ($missingAlgoBalance > 0) {
+                Algo::sendAlgo($account, $missingAlgoBalance);
+                sleep(Helpers::REQUEST_DELAY);
 
-            Algo::sendAlgo($account, $missingAlgoBalance);
-            sleep(Helpers::REQUEST_DELAY);
+                try {
+                    BaseCall::__init();
 
-            try {
-                BaseCall::__init();
-
-                BaseCall::$httpClient->request('POST', Endpoints::ENDPOINT_OPTIN, [
-                    RequestOptions::JSON => [
-                        'publicKey' => $account->algorand_address,
-                        'accountId' => $account->guid,
-                        'assetId' => (int)$assetId,
-                    ]
-                ]);
-            } catch (GuzzleException $exception) {
-                throw new BadRequestHttpException($exception->getMessage());
+                    BaseCall::$httpClient->request('POST', Endpoints::ENDPOINT_OPTIN, [
+                        RequestOptions::JSON => [
+                            'publicKey' => $account->algorand_address,
+                            'accountId' => $account->guid,
+                            'assetId' => (int)$assetId,
+                        ]
+                    ]);
+                } catch (GuzzleException $exception) {
+                    throw new BadRequestHttpException($exception->getMessage());
+                }
             }
         }
     }
