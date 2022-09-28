@@ -52,7 +52,7 @@ class Coin
             sleep(Helpers::REQUEST_DELAY);
         }
 
-        Algo::sendAlgo($recipientAccount, Helpers::MINIMUM_ASSET_CREATION_ALGO_BALANCE);
+        Algo::sendAlgo($recipientAccount, Helpers::calculateMinimumRequiredAlgoBalance(0));
         sleep(Helpers::REQUEST_DELAY);
 
         BaseCall::__init();

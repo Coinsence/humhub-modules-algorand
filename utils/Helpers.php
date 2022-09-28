@@ -64,6 +64,6 @@ class Helpers
 
     public static function calculateMinimumRequiredAlgoBalance($assetsCount)
     {
-        return 0.05 + ($assetsCount + 1) * 0.1;
+        return 0.1 + ($assetsCount + 1) * 0.11;
     }
 }
